@@ -1,169 +1,216 @@
 const express = require('express'),
-    app = express(),
     bodyParser = require('body-parser'),
     uuid = require('uuid');
 
+const morgan = require('morgan');
+const app = express();
+const mongoose = require('mongoose');
+const Models = require('./models.js');
+
+const Movies = Models.Movie;
+const Users = Models.User;
+
+mongoose.connect('mongodb+srv://kwanilya:passw0rd@cluster0.bsaptce.mongodb.net/myflix');
+
 app.use(bodyParser.json());
+app.use(morgan('common'));
 
-let users = [
-    {
-        id: 1,
-        name: "user1",
-        favoriteMovies: []
-    },
-    {
-        id: 2,
-        name: "user2",
-        favoriteMovies: ["The Shawshank Redemption"]
-    },
-];
 
-let movies = [
-    {
-        "Title": "The Shawshank Redemption",
-        "Description": "Over the course of several years, two convicts form a friendship, seeking consolation and, eventually, redemption through basic compassion.",
-        "Genre": {
-            "Name": "Drama",
-            "Description": "In film and television, drama is a category of narrative fiction (or semi-fiction) intended to be more serious than humorous in tone."
-        },
-        "Director": {
-            "Name": "Frank Darabont",
-            "Bio": `Frank Darabont, born on January 28, 1959, is a Hungarian-American filmmaker known for his exceptional work as a director, screenwriter, and producer. He made his mark with "The Shawshank Redemption" (1994), based on Stephen King's novella, which later became a cinematic classic despite its initial box office reception. Darabont continued his collaboration with King, directing the critically acclaimed "The Green Mile" (1999), earning multiple Academy Award nominations. He showcased his versatility with projects like the film adaptation of John Steinbeck's "The Mist" (2007). Darabont's venture into television with AMC's "The Walking Dead" (2010) further highlighted his storytelling prowess, setting a high standard for the series' debut season. Throughout his career, Darabont has consistently delivered compelling narratives, solidifying his status as a visionary filmmaker in both film and television.`,
-            "Birth": 1959
-        },
-        "ImageURL": "https://upload.wikimedia.org/wikipedia/commons/1/19/Frank_Darabont_at_the_PaleyFest_2011_-_The_Walking_Dead_panel.jpg",
-        "Featured": false
-    },
+// Greeting message
+app.get('/', async (req, res) => {
+    res.send('Welcome to my movie app!');
+});
 
-    {
-        "Title": "The Godfather",
-        "Description": "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.",
-        "Genre": {
-            "Name": "Drama",
-            "Description": "In film and television, drama is a category of narrative fiction (or semi-fiction) intended to be more serious than humorous in tone."
-        },
-        "Director": {
-            "Name": "Francis Ford Coppola",
-            "Bio": `Francis Ford Coppola, born on April 7, 1939, in Detroit, Michigan, is an iconic American filmmaker celebrated for his groundbreaking contributions to cinema. Rising to prominence in the 1970s, Coppola's directorial masterpiece, "The Godfather" (1972), became a cultural phenomenon, earning him widespread acclaim and multiple Academy Awards. He solidified his status with the sequel, "The Godfather Part II" (1974), making cinematic history by becoming the first director to win consecutive Oscars for Best Picture. Coppola's diverse portfolio includes the epic Vietnam War film "Apocalypse Now" (1979), renowned for its technical innovation and profound storytelling.`,
-            "Birth": 1939
-        },
-        "ImageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Francis_Ford_Coppola_%2833906700778%29_%28cropped%29.jpg/1280px-Francis_Ford_Coppola_%2833906700778%29_%28cropped%29.jpg",
-        "Featured": false
-    },
-    
-];
 
-// Creat new user
-app.post('/users', (req, res) => {
-    const newUser = req.body;
+//Read all users
+app.get('/users', async (req, res) => {
+    await Users.find()
+        .then((users) => {
+            res.status(201).json(users);
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
 
-    if (newUser.name) {
-        newUser.id = uuid.v4();
-        users.push(newUser);
-        res.status(201).json(newUser);
-    } else {
-        res.status(400).send('Write user name');
-    }
-})
 
-//Delete user
-app.delete('/users/:id', (req, res) => {
-    const {id} = req.params;
 
-    let user = users.find( user => user.id == id);
 
-    if (user) {
-        users = users.filter( user => user.id != id);
-        res.status(200).send('user was deleted');
-    } else {
-        res.status(400).send('User  is not found');
-    }
-})
+// Find user by username
+app.get('/users/:Username', async (req, res) => {
+    await Users.findOne({ Username: req.params.Username })
+        .then((user) => {
+            res.json(user);
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
+
+
+
+// Add new user
+app.post('/users', async (req, res) => {
+    await Users.findOne({ Username: req.body.Username })
+        .then((user) => {
+            if (user) {
+                return res.status(400).send(req.body.Username + 'already exist');
+            } else {
+                Users
+                    .create({
+                        Username: req.body.Username,
+                        Password: req.body.Password,
+                        Email: req.body.Email,
+                        Birthday: req.body.Birthday
+                    })
+                    .then((user) => { res.status(201).json(user) })
+                    .catch((error) => {
+                        console.error(error);
+                        res.status(500).send('Error: ' + error);
+                    })
+            }
+        })
+        .catch((error) => {
+            console.error(error);
+            res.status(500).send('Error: ' + error);
+        });
+});
+
+
 
 //Update user info
-app.put('/users/:id', (req, res) => {
-    const {id} = req.params;
-    const updatedUser = req.body;
+app.put('/users/:Username', async (req, res) => {
+    await Users.findOneAndUpdate({ Username: req.params.Username }, {
+        $set:
+        {
+            Username: req.body.Username,
+            Password: req.body.Password,
+            Email: req.body.Email,
+            Birthday: req.body.Birthday
+        }
+    },
+        { new: true })
+        .then((updatedUser) => {
+            res.json(updatedUser);
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        })
 
-    let user = users.find( user => user.id == id);
+});
 
-    if (user) {
-        user.name = updatedUser.name;
-        res.status(200).json(user);
-    } else {
-        res.status(400).send('User is not found');
-    }
-})
 
-// View all movies
-app.get('/movies', (req, res) => {
-    res.status(200).json(movies);
-})
+// Add movie to the list of favorite
+app.post('/users/:Username/favoritemovies', async (req, res) => {
+    await Users.findOneAndUpdate({ Username: req.params.Username }, {
+        $push: { FavoriteMovies: req.params.MovieID }
+    },
+        { new: true })
+        .then((updatedUser) => {
+            res.json(updatedUser);
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
 
-// View info about movie by it's title
-app.get('/movies/:title', (req, res) => {
-    const {title} = req.params;
-    const movie = movies.find( movie => movie.Title === title );
 
-    if (movie) {
-        res.status(200).json(movie);
-    } else {
-        res.status(400).send('Movie title is not found');
-    }
-})
+//Delete movie from the list of favorite
+app.delete('/users/:Username/favoriteMovies', async (req, res) => {
+    await Users.findOneAndUpdate({ Username: req.params.Username }, {
+        $pull: { FavoriteMovies: req.params.MovieID }
+    },
+        { new: true })
+    .then((updatedUser) => {
+        res.json(updatedUser);
+    })
+    .catch((err) => {
+        console.error(err);
+        res.status(500).send('Error: ' + err);
+    });
+});
 
-// View info about genre
-app.get('/movies/genre/:genreType', (req, res) => {
-    const {genreType} = req.params;
-    const genre = movies.find( movie => movie.Genre.Name === genreType ).Genre;
 
-    if (genre) {
-        res.status(200).json(genre);
-    } else {
-        res.status(400).send('This genre is not found');
-    }
-})
+// Delete user
+app.delete('/users/:Username', async (req, res) => {
+    await Users.findOneAndRemove({ Username: req.params.Username })
+        .then((user) => {
+            if (!user) {
+                res.status(400).send(req.params.Username + ' was not found');
+            } else {
+                res.status(200).send(req.params.Username + ' was deleted.');
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
 
-// View info about director
-app.get('/movies/directors/:directorName', (req, res) => {
-    const {directorName} = req.params;
-    const director = movies.find( movie => movie.Director.Name === directorName ).Director;
 
-    if (director) {
-        res.status(200).json(director);
-    } else {
-        res.status(400).send('Director is not found');
-    }
-})
+//Read all movies
+app.get('/movies', async (req, res) => {
+    await Movies.find()
+        .then((movies) => {
+            res.status(201).json(movies);
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
 
-//Add movie to favorites
-app.post('/users/:id/:movieTitle', (req, res) => {
-    const {id, movieTitle} = req.params;
 
-    let user = users.find( user => user.id == id);
 
-    if (user) {
-        user.favoriteMovies.push(movieTitle);
-        res.status(200).send('Movie has bees added to user favorites');
-    } else {
-        res.status(400).send('User  is not found');
-    }
-})
+// Find movie by title
+app.get('/movies/:Title', async (req, res) => {
+    await Movies.findOne({ Title: req.params.Title })
+        .then((movie) => {
+            res.status(201).json(movie);
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
 
-//Delete movie from favorites
-app.delete('/users/:id/:movieTitle', (req, res) => {
-    const {id, movieTitle} = req.params;
 
-    let user = users.find( user => user.id == id);
+// Find info about genre
+app.get('/movies/genre/:Name', async (req, res) => {
+    await genre.findOne({ Name: req.params.Name })
+        .then((genre) => {
+            res.json(genre.Description);
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
 
-    if (user) {
-        user.favoriteMovies = user.favoriteMovies.filter( title => title !== movieTitle);
-        res.status(200).send('Movie has been deleted from user favorites');
-    } else {
-        res.status(400).send('User  is not found');
-    }
-})
 
-app.listen(8080, () => {
-    console.log('My app is listening on port 8080.');
+
+// Find info about director
+app.get('/movies/directors/:Name', async (req, res) => {
+    await director.findOne({ Name: req.params.Name })
+        .then((director) => {
+            res.json(director);
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+        });
+});
+
+
+
+
+
+const PORT = process.env.PORT || 3000
+
+app.listen(PORT, () => {
+    console.log('My app is listening on port ' + PORT);
 });
