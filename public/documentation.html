@@ -40,7 +40,7 @@
             </tr>
             <tr>
                 <td>Full information about a movie</td>
-                <td>/movies/[title]</td>
+                <td>/movies/:Title</td>
                 <td>GET</td>
                 <td>None</td>
                 <td>A JSON object holding data about the requested movie
@@ -55,9 +55,9 @@
                             "Director": {
                               "Name": [director name],
                               "Bio": [director bio],
-                              "Birth": [year of birth]
+                              "Birth": [year of birth],
+                              "Death": [year of death]
                             },
-                            "ImageURL": [link to director image],
                             "Featured": [true or false]
                         }
                     </pre>
@@ -65,21 +65,20 @@
             </tr>
             <tr>
                 <td>Movie genre</td>
-                <td>/movies/genre/[genre type]</td>
+                <td>/genre/:GenreName</td>
                 <td>GET</td>
                 <td>None</td>
                 <td>
                     <pre>
                         {
-                            "Name": [genre name],
-                            "Description": [genre description]
+                            "description": [genre description]
                         }
                     </pre>
                 </td>
             </tr>
             <tr>
                 <td>About director</td>
-                <td>/movies/directors/[director name]</td>
+                <td>/directors/:DirectorName</td>
                 <td>GET</td>
                 <td>None</td>
                 <td>
@@ -87,7 +86,8 @@
                         {
                             "Name": [director name],
                             "Bio": [director bio],
-                            "Birth": [year of birth]
+                            "Birth": [year of birth],
+                            "Death": [year of death]
                         }
                     </pre>
                 </td>
@@ -101,14 +101,14 @@
             </tr>
             <tr>
                 <td>Finding user by username</td>
-                <td>/users/[username]</td>
+                <td>/users/:Username</td>
                 <td>GET</td>
                 <td>None</td>
                 <td>A JSON object holding data about user
                     <pre>
                         {
                             "id": [user ID],
-                            "username": [user name],
+                            "username": [username],
                             "password": [password],
                             "email": [email],
                             "favoriteMovies": [favourite movies list]
@@ -123,16 +123,20 @@
                 <td>A JSON holding data about user
                     <pre>
                         {
-                        "username": [user name],
-                        "favoriteMovies": [favourite movies list]
+                        "username": [username],
+                        "password": [password],
+                        "email": [email],
+                        "favoriteMovies": [movies ID]
                         }
                     </pre>
                 </td>
                 <td>
                     <pre>
                         {
-                            "username": [user name],
-                            "favoriteMovies": [favourite movies list],
+                            "username": [username],
+                            "password": [password],
+                            "email": [email],
+                            "favoriteMovies": [favourite movies ID],
                             "id": [id number]
                         }
                     </pre>
@@ -140,12 +144,14 @@
             </tr>
             <tr>
                 <td>Update user info</td>
-                <td>/users/[username]</td>
+                <td>/users/:Username</td>
                 <td>PUT</td>
                 <td>
                     <pre>
                         {
-                            "username": [updated user name],
+                            "username": [username],
+                            "password": [password],
+                            "email": [email],
                             "favoriteMovies": [favourite movies list]
                         }
                     </pre>
@@ -154,7 +160,7 @@
                     <pre>
                         {
                             "id": [user ID],
-                            "username": [updated user name],
+                            "username": [username],
                             "password": [password],
                             "email": [email],
                             "favoriteMovies": [favourite movies list]
@@ -163,32 +169,50 @@
                 </td>
             </tr>
             <tr>
-                <td>Add movie to favourites</td>
-                <td>/users/[username]/[movie title to be added to favourites]</td>
+                <td>Add movie to favorites</td>
+                <td>/users/:Username/favouriteMovies</td>
                 <td>POST</td>
-                <td>None</td>
-                <td>"Movie has bees added to user favorites"</td>
+                <td>
+                    <pre>
+                        {
+                            "favoriteMovies": [favourite movie ID]
+                        }
+                    </pre></td>
+                <td>
+                    <pre>
+                        {
+                            "id": [user ID],
+                            "username": [username],
+                            "password": [password],
+                            "email": [email],
+                            "favoriteMovies": [favourite movies list with added movie]
+                        }
+                    </pre>
+                </td>
             </tr>
             <tr>
                 <td>Remove movie from favourites</td>
-                <td>/users/[username]/[movie title to be deleted from favourites]</td>
+                <td>/users/Username/favoriteMovies/:MovieID</td>
                 <td>DELETE</td>
                 <td>None</td>
-                <td>"Movie has been deleted from user favorites"</td>
+                <td>
+                    <pre>
+                        {
+                            "id": [user ID],
+                            "username": [username],
+                            "password": [password],
+                            "email": [email],
+                            "favoriteMovies": [favourite movies list without deleted movie]
+                        }
+                    </pre>
+                </td>
             </tr>
             <tr>
                 <td>Delete user registration</td>
-                <td>/users/[username]</td>
+                <td>/users/:Username</td>
                 <td>DELETE</td>
-                <td>
-                    <pre>
-                    {
-                        "username": [user name],
-                        "favoriteMovies": [favourite movies list]
-                    }
-                    </pre>
-                </td>
-                <td>"user was deleted"</td>
+                <td>None</td>
+                <td>"[Username] was deleted"</td>
             </tr>
         </tbody>
     </table>
