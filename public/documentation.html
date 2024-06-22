@@ -71,7 +71,8 @@
                 <td>
                     <pre>
                         {
-                            "description": [genre description]
+                            "Name": [genre name]
+                            "Description": [genre description]
                         }
                     </pre>
                 </td>
@@ -170,14 +171,9 @@
             </tr>
             <tr>
                 <td>Add movie to favorites</td>
-                <td>/users/:Username/favouriteMovies</td>
-                <td>POST</td>
-                <td>
-                    <pre>
-                        {
-                            "favoriteMovies": [favourite movie ID]
-                        }
-                    </pre></td>
+                <td>/users/:Username/favouriteMovies/:MovieID</td>
+                <td>PUT</td>
+                <td>None</td>
                 <td>
                     <pre>
                         {
