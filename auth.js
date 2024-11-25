@@ -1,3 +1,9 @@
+
+/**
+ * Shirt module.
+ * @module auth
+ */
+
 const jwtSecret = 'your_jwt_secret';
 
 const jwt = require('jsonwebtoken'),
@@ -5,6 +11,11 @@ const jwt = require('jsonwebtoken'),
 
 require('./passport');
 
+/**
+ * Generates a JWT Token
+ * @param {*} user 
+ * @returns {}
+ */
 let generateJWTToken = (user) => {
     return jwt.sign(user, jwtSecret, {
         subject: user.Username,
@@ -13,6 +24,10 @@ let generateJWTToken = (user) => {
     });
 }
 
+/**
+ * This handles Log in
+ * @param {*} router 
+ */
 module.exports = (router) => {
     router.post('/login', (req, res) => {
         passport.authenticate('local', { session: false }, (error, user, info) => {
